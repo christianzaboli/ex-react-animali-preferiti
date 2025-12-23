@@ -17,10 +17,41 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <!-- struttura react scripts -->
+
     <script type="text/babel">
+      // Modale details
+      const { useState } = React;
+
+      function Modal({
+        title,
+        content,
+        show = false,
+        onClose = () => {},
+        onSubmit = () => {},
+      }) {
+        return (
+          show &&
+          ReactDOM.createPortal(
+            <div className="modal-container">
+              <div className="modal">
+                <h2>{title}</h2>
+                {content}
+                <div>
+                  <button onClick={onSubmit}>Conferma</button>
+                  <button onClick={onClose}>Annulla</button>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        );
+      }
+
       const ReactApp = () => {
-        const { useState } = React;
+        const [show, setShow] = useState(false);
         const [animals, setAnimals] = useState([]);
+        const [userText, setUserText] = useState("");
+        const userInput = document.getElementById("input1");
 
         const animalsChoices = [
           "Cane",
@@ -32,23 +63,29 @@
 
         return (
           <>
-            <button
-              onClick={() =>
-                setAnimals([
-                  ...animals,
-                  animalsChoices[
-                    Math.floor(Math.random() * animalsChoices.length)
-                  ],
-                ])
-              }
-            >
-              Aggiungi Animale
-            </button>
+            <button onClick={() => setShow(!show)}>Aggiungi Animale</button>
             <details>
-              <h1>Animali</h1>
+              <summary>Animali</summary>
+              <Modal
+                title="Aggiungi un animale"
+                content={
+                  <input
+                    id="input1"
+                    type="text"
+                    value={userText}
+                    onChange={(e) => setUserText(e.target.value)}
+                  />
+                }
+                show={show}
+                onClose={() => setShow(!show)}
+                onSubmit={() => {
+                  setAnimals([...animals, userText]);
+                  setShow(false);
+                }}
+              />
               <ul>
-                {animals?.map((a) => {
-                  return <li>{a}</li>;
+                {animals?.map((a, i) => {
+                  return <li key={i}>{a}</li>;
                 })}
               </ul>
             </details>
@@ -56,7 +93,9 @@
         );
       };
     </script>
+
     <script type="text/babel">
+      // rendering
       const { createRoot } = ReactDOM;
       const listAnimali = document.querySelector(".lista-animali");
       const root = createRoot(listAnimali);
