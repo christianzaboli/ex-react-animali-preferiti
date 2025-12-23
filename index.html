@@ -19,16 +19,40 @@
     <!-- struttura react scripts -->
     <script type="text/babel">
       const ReactApp = () => {
-        const animals = ["cane", "gatto", "topo"];
+        const { useState } = React;
+        const [animals, setAnimals] = useState([]);
+
+        const animalsChoices = [
+          "Cane",
+          "Gatto",
+          "Pappagallo",
+          "Cavallo",
+          "Panda",
+        ];
+
         return (
-          <details>
-            <h1>Animali</h1>
-            <ul>
-              {animals.map((a) => {
-                return <li>{a}</li>;
-              })}
-            </ul>
-          </details>
+          <>
+            <button
+              onClick={() =>
+                setAnimals([
+                  ...animals,
+                  animalsChoices[
+                    Math.floor(Math.random() * animalsChoices.length)
+                  ],
+                ])
+              }
+            >
+              Aggiungi Animale
+            </button>
+            <details>
+              <h1>Animali</h1>
+              <ul>
+                {animals?.map((a) => {
+                  return <li>{a}</li>;
+                })}
+              </ul>
+            </details>
+          </>
         );
       };
     </script>
