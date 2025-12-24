@@ -18,10 +18,11 @@
 
     <!-- struttura react scripts -->
 
+    <!-- Modale div -->
     <script type="text/babel">
-      // Modale details
       const { useState } = React;
 
+      // componente modal overlay
       function Modal({
         title,
         content,
@@ -47,12 +48,73 @@
         );
       }
 
+      // fetchjson
+      async function fetchJson(url) {
+        const response = await fetch(url);
+        const obj = await response.json();
+        return obj;
+      }
+      // ---------------------------------------------------------
+      // componente principale
       const ReactApp = () => {
+        // show del modal
         const [show, setShow] = useState(false);
-        const [animals, setAnimals] = useState([]);
-        const [userText, setUserText] = useState("");
-        const userInput = document.getElementById("input1");
 
+        // stato della lista animali
+        const [animals, setAnimals] = useState([]);
+
+        // campo input modale
+        const [userText, setUserText] = useState("");
+
+        const [isLoading, setIsLoading] = useState(false);
+        const [errorMessage, setErrorMessage] = useState("");
+
+        // const confirmInput = () => {
+        //   setAnimals([...animals, userText]);
+        //   setUserText("");
+        //   setShow(false);
+        // };
+
+        async function confirmInputApi() {
+          //blocco nel caso non viene messo input
+          if (!userText.trim()) return;
+
+          // imposto loading e messaggio base
+          setIsLoading(true);
+          setErrorMessage("");
+          try {
+            const [result] = await fetchJson(
+              `http://localhost:3333/animals?search=${userText}`
+            );
+
+            // blocco funzione nel caso non api risponde con nulla
+            if (!result) {
+              throw new Error("Nessun animale trovato");
+            }
+            const animal = {
+              name: result.name || null,
+              description: result.description || null,
+              image: result.image || null,
+            };
+            setAnimals((curr) => [...curr, animal]);
+          } catch (err) {
+            console.error(err);
+
+            // gestione messaggio errori in base al caso
+            const message =
+              err.message === "Nessun animale trovato"
+                ? "Nessun animale trovato"
+                : "Errore nella ricerca dell'animale";
+            setErrorMessage(message);
+          } finally {
+            //chiusura modale
+            setIsLoading(false);
+            setUserText("");
+            setShow(!show);
+          }
+        }
+
+        // random animali array
         const animalsChoices = [
           "Cane",
           "Gatto",
@@ -61,41 +123,56 @@
           "Panda",
         ];
 
+        // --- render
         return (
           <>
             <button onClick={() => setShow(!show)}>Aggiungi Animale</button>
-            <details>
-              <summary>Animali</summary>
+            <div>
+              <h1>Animali</h1>
               <Modal
                 title="Aggiungi un animale"
                 content={
-                  <input
-                    id="input1"
-                    type="text"
-                    value={userText}
-                    onChange={(e) => setUserText(e.target.value)}
-                  />
+                  <>
+                    <input
+                      id="input1"
+                      type="text"
+                      value={userText}
+                      onChange={(e) => setUserText(e.target.value)}
+                    />
+                    {isLoading && <p>Caricamento</p>}
+                  </>
                 }
                 show={show}
                 onClose={() => setShow(!show)}
-                onSubmit={() => {
-                  setAnimals([...animals, userText]);
-                  setShow(false);
-                }}
+                onSubmit={confirmInputApi}
               />
-              <ul>
-                {animals?.map((a, i) => {
-                  return <li key={i}>{a}</li>;
-                })}
-              </ul>
-            </details>
+              {errorMessage && <p>{errorMessage}</p>}
+              {animals?.map((a, i) => {
+                return (
+                  <div key={i}>
+                    <div>
+                      <h3>{a?.name}</h3>
+                      <figure>
+                        <img
+                          src={
+                            "https://m.media-amazon.com/images/S/pv-target-images/e003228b534c004fac42037e6411095a7a5d58d310c6471b2ca8556a45656cb3._SX1080_FMjpg_.jpg"
+                          }
+                          alt={a?.name}
+                        />
+                        <figcaption>{a?.description}</figcaption>
+                      </figure>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </>
         );
       };
     </script>
 
+    <!-- impaginazione -->
     <script type="text/babel">
-      // rendering
       const { createRoot } = ReactDOM;
       const listAnimali = document.querySelector(".lista-animali");
       const root = createRoot(listAnimali);
